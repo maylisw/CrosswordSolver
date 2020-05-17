@@ -1,2 +1,2 @@
 # CrosswordSolver
-Ha! I beat you!
+Using https://github.com/doshea/nyt_crosswords we built an acessible database of past clues and answers for the NYT Crossword puzzle.
