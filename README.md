@@ -7,7 +7,7 @@ Make sure the include header for the two align with where the package is install
 
 ie. <jsoncpp/json/json.h> might change
 
-### JSONCPP
+### Json Cpp
 sudo apt-get install libjsoncpp-dev
 iasa
 ### Curl
