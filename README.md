@@ -1,5 +1,5 @@
 # CrosswordSolver
-Using [NYT_Crosswords](github.com/doshea/nyt_crosswords) we built an acessible database of past clues and answers for the NYT Crossword puzzle.
+Using [NYT_Crosswords](https://github.com/doshea/nyt_crosswords) we built an acessible database of past clues and answers for the NYT Crossword puzzle.
 
 ## Note:
 To use the JSON-test program you need to install jsoncpp and curl. 
