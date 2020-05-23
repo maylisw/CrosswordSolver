@@ -4,7 +4,7 @@
   - [x] JSON request and parse
   - [x] Objects to store pairs
   - [x] Iterate & pair clues and answer
-  - [ ] Create objects in loop
+  - [x] Create objects in loop
   - [ ] Override .equals in ClueObj
   - [ ] Add objects to a set ordered alphabetically by **clue**
 - [ ] Long-term

@@ -11,10 +11,10 @@ using namespace std;
 class ClueObj {
     public:
         // constructor
-        ClueObj(const char *c, const char *a);
+        ClueObj(const string c, const string a);
 
         // destructor
-        ~ClueObj();
+        ~ClueObj(){}
 
         // copy constructor
         ClueObj(const ClueObj& rhs);
@@ -22,14 +22,19 @@ class ClueObj {
         // copy assignment
         ClueObj& operator=(const ClueObj& rhs);
 
-        int length() const {return strlen(answer); }
-
         // put-to operator
         friend ostream& operator<<(ostream& os, const ClueObj& o);
+        
+        // GETTERS
+        string getClue() {return clue; }
+
+        string getAnswer() {return answer; }
+
+        int length() const {return answer.length(); }
 
     private:
-        char* clue;
-        char* answer;
+        string clue;
+        string answer;
 };
 
 #endif

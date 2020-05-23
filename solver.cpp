@@ -74,38 +74,35 @@ int getPairs(int year, int month, int day/*, set<ClueObj>& pairs*/) {
             if(jsonReader.parse(*httpData.get(), jsonData)) {
                 cerr << "Sucessfully parsed JSON data" << endl;
 
-                int c_across_size = (int) jsonData["clues"]["across"].size();
-                int c_down_size = (int) jsonData["clues"]["down"].size();
-                int a_across_size = (int) jsonData["answers"]["across"].size();
-                int a_down_size = (int) jsonData["answers"]["down"].size();
-
                 Json::Value c_across = jsonData["clues"]["across"];
                 Json::Value c_down = jsonData["clues"]["down"];
                 Json::Value a_across = jsonData["answers"]["across"];
                 Json::Value a_down = jsonData["answers"]["down"];
+                
+                ClueObj *obj;
 
-                if(c_across_size == a_across_size) {
-                    for(int i = 0; i < c_across_size; i ++) {
-                        cerr << "clue: " << c_across[i].asString();
-                        cerr << " answer: " << a_across[i].asString() << endl;
-                        //TODO Create ClueObj, strip numbers 
+                if(c_across.size() == a_across.size()) {
+                    for(int i = 0; i < (int) c_across.size(); i ++) {
+                        string clue = c_across[i].asString();
+                        obj = new ClueObj(clue.substr(clue.find(". ") + 2), a_across[i].asString());
+                        cerr << *obj << endl;; 
                     }
                 } else {
-                    cerr << "c len: " << c_across_size << " a len: " << a_across_size << endl;
+                    cerr << "c len: " << c_across.size() << " a len: " << a_across.size() << endl;
                     cerr << c_across << endl;
                     cerr << a_across << endl;
                     cerr << "Across clues and answers are not the same len" << endl;
                     return 1;
                 }
 
-                if(c_down_size == a_down_size) {
-                    for(int i = 0; i < c_down_size; i ++) {
-                        cerr << "clue: " << c_down[i].asString();
-                        cerr << " answer: " << a_down[i].asString() << endl;
-                        //TODO Create ClueObjs, strip numbers 
+                if(c_down.size() == a_down.size()) {
+                    for(int i = 0; i < (int) c_down.size(); i ++) {
+                        string clue = c_down[i].asString();
+                        obj = new ClueObj(clue.substr(clue.find(". ") + 2), a_down[i].asString());
+                        cerr << *obj << endl;
                     }
                 } else {
-                    cerr << "c len: " << c_down_size << " a len: " << a_down_size << endl;
+                    cerr << "c len: " << c_down.size() << " a len: " << a_down.size() << endl;
                     cerr << c_down << endl;
                     cerr << a_down<< endl;
                     cerr << "Down clues and answers are not the same len" << endl;
