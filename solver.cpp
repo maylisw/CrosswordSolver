@@ -35,96 +35,109 @@ namespace {
     }
 }
 
-int main(int argc, char **argv) {
-    // NOTE: leap years all divide by 4
-    // note - not portable for any new centuries lol due to leap year rules
-    //TODO create a loop to request each puzzel for each day or each month of each year
-    //KNOWN gaps, aug 10, 1978 trhough nov 5, 1978
-    //inconsistant data starting in 2015
-
+int getPairs(int year, int month, int day/*, set<ClueObj>& pairs*/) {
     // Create url
     char format_url[100];
-    snprintf(format_url, sizeof(format_url), "https://raw.githubusercontent.com/doshea/nyt_crosswords/master/%d/%.2d/%.2d.json", 1980, 12, 01);
+    snprintf(format_url, sizeof(format_url), "https://raw.githubusercontent.com"
+            "/doshea/nyt_crosswords/master/%d/%.2d/%.2d.json", year, month, day);
     
     cerr << format_url << endl;
     string url(format_url);
     
     // Create Curl
     CURL *curl = curl_easy_init();
+    if(curl) {
+        // Set options: URL, IP Resolve, Timeout, & Redirects
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //IPv4
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
-    // Set options: URL, IP Resolve, Timeout, & Redirects
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //IPv4
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        // Response information
+        long httpCode(0);
+        unique_ptr<string> httpData(new string);
 
-    // Response information
-    long httpCode(0);
-    unique_ptr<string> httpData(new string);
+        // Data handling function and container
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
 
-    // Data handling function and container
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
+        // Run GET, capture resp codem, and clean up
+        curl_easy_perform(curl);
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+        curl_easy_cleanup(curl);
 
-    // Run GET, capture resp codem, and clean up
-    curl_easy_perform(curl);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-    curl_easy_cleanup(curl);
+        if(httpCode != CURLE_HTTP_RETURNED_ERROR) {
+            cerr << "Sucessful response from " << url << endl;
+            Json::Value jsonData;
+            Json::Reader jsonReader;
 
-    if(httpCode != CURLE_HTTP_RETURNED_ERROR) {
-        cerr << "Sucessful response from " << url << endl;
+            if(jsonReader.parse(*httpData.get(), jsonData)) {
+                cerr << "Sucessfully parsed JSON data" << endl;
 
-        Json::Value jsonData;
-        Json::Reader jsonReader;
+                int c_across_size = (int) jsonData["clues"]["across"].size();
+                int c_down_size = (int) jsonData["clues"]["down"].size();
+                int a_across_size = (int) jsonData["answers"]["across"].size();
+                int a_down_size = (int) jsonData["answers"]["down"].size();
 
-        if(jsonReader.parse(*httpData.get(), jsonData)) {
-            cerr << "Sucessfully parsed JSON data" << endl;
+                Json::Value c_across = jsonData["clues"]["across"];
+                Json::Value c_down = jsonData["clues"]["down"];
+                Json::Value a_across = jsonData["answers"]["across"];
+                Json::Value a_down = jsonData["answers"]["down"];
 
-            int c_across_size = (int) jsonData["clues"]["across"].size();
-            int c_down_size = (int) jsonData["clues"]["down"].size();
-            int a_across_size = (int) jsonData["answers"]["across"].size();
-            int a_down_size = (int) jsonData["answers"]["down"].size();
+                if(c_across_size == a_across_size) {
+                    for(int i = 0; i < c_across_size; i ++) {
+                        cerr << "clue: " << c_across[i].asString();
+                        cerr << " answer: " << a_across[i].asString() << endl;
+                        //TODO Create ClueObj, strip numbers 
+                    }
+                } else {
+                    cerr << "c len: " << c_across_size << " a len: " << a_across_size << endl;
+                    cerr << c_across << endl;
+                    cerr << a_across << endl;
+                    cerr << "Across clues and answers are not the same len" << endl;
+                    return 1;
+                }
 
-            Json::Value c_across = jsonData["clues"]["across"];
-            Json::Value c_down = jsonData["clues"]["down"];
-            Json::Value a_across = jsonData["answers"]["across"];
-            Json::Value a_down = jsonData["answers"]["down"];
-        
-            if(c_across_size == a_across_size) {
-                for(int i = 0; i < c_across_size; i ++) {
-                    cerr << "clue: " << c_across[i];
-                    cerr << " answer: " << a_across[i] << endl;
-                    //TODO use .toStyledString and/or .c_str() to create ClueObjs 
+                if(c_down_size == a_down_size) {
+                    for(int i = 0; i < c_down_size; i ++) {
+                        cerr << "clue: " << c_down[i].asString();
+                        cerr << " answer: " << a_down[i].asString() << endl;
+                        //TODO Create ClueObjs, strip numbers 
+                    }
+                } else {
+                    cerr << "c len: " << c_down_size << " a len: " << a_down_size << endl;
+                    cerr << c_down << endl;
+                    cerr << a_down<< endl;
+                    cerr << "Down clues and answers are not the same len" << endl;
+                    return 1;
                 }
             } else {
-                cerr << "c len: " << c_across_size << " a len: " << a_across_size << endl;
-                cerr << c_across << endl;
-                cerr << a_across << endl;
-                cerr << "Across clues and answers are not the same len" << endl;
+                cerr << "Could not parse HTTP data as JSON" << endl;
+                cerr <<  "HTTP data was:\n" << *httpData.get() << endl;
+                return 1;
             }
-
-            if(c_down_size == a_down_size) {
-                for(int i = 0; i < c_down_size; i ++) {
-                    cerr << "clue: " << c_down[i];
-                    cerr << " answer: " << a_down[i] << endl;
-                    //TODO use .toStyledString and/or .c_str() to create ClueObjs 
-                }
-            } else {
-                cerr << "c len: " << c_down_size << " a len: " << a_down_size << endl;
-                cerr << c_down << endl;
-                cerr << a_down<< endl;
-                cerr << "Down clues and answers are not the same len" << endl;
-            }
-
-       } else {
-            cerr << "Could not parse HTTP data as JSON" << endl;
-            cerr <<  "HTTP data was:\n" << *httpData.get() << endl;
+        } else {
+            cerr << "Couldn't GET from " << url << endl;
+            cerr << httpCode << " error" << endl;
             return 1;
         }
     } else {
-        cerr << "Couldn't GET from " << url << endl;
-        cerr << httpCode << " error" << endl;
+        cerr << "Curl failed" <<endl;
         return 1;
     }
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    // Note: This code works for all leap years from 1904 to 2096
+
+    //TODO create a loop to request each puzzel for each day or each month of each year
+    // NOTE: leap years all divide by 4
+    //KNOWN gaps, aug 10, 1978 trhough nov 5, 1978
+    //inconsistant data starting in 2015
+
+    /*set<ClueObj> pairs = new set<ClueObj>;*/
+    getPairs(1980, 1, 31/*, pairs*/);
+
     return 0;
 }
