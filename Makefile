@@ -9,8 +9,8 @@ CXXFLAGS = -g -Wall $(INCLUDES) -std=c++11
 LDFLAGS = -g 
 LDLIBS  = -ljsoncpp -lcurl 
 
-executables = JSON-test
-objects = JSON-test.o ClueObj.o
+executables = solver #JSON-test	
+objects = ClueObj.o solver.o #JSON-test.o
 
 .PHONY: default
 default: $(executables)
