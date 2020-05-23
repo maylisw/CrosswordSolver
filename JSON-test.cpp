@@ -67,10 +67,14 @@ int main(int argc, char **argv) {
         if(jsonReader.parse(*httpData.get(), jsonData)) {
             cerr << "Sucessfully parsed JSON data" << endl;
             cerr << "\n JSON data recieved:" << endl;
-            cerr << "answers" << jsonData["answers"].toStyledString() << endl;
-            cerr << "clues" << jsonData["clues"].toStyledString() << endl;
 
-        } else {
+            // NEED to strtok() by ,\n to create each one 
+            cerr << "across" << jsonData["answers"]["across"].toStyledString() << endl;
+            cerr << "down" << jsonData["answers"]["down"].toStyledString() << endl;
+            cerr << "across" << jsonData["clues"]["across"].toStyledString() << endl;
+            cerr << "down" << jsonData["clues"]["down"].toStyledString() << endl;
+
+       } else {
             cerr << "Could not parse HTTP data as JSON" << endl;
             cerr <<  "HTTP data was:\n" << *httpData.get() << endl;
             return 1;
