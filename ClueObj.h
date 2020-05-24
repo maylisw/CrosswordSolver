@@ -22,6 +22,7 @@ class ClueObj {
         // copy assignment
         ClueObj& operator=(const ClueObj& rhs);
 
+        bool operator<( const ClueObj & rhs) const;
         // put-to operator
         friend ostream& operator<<(ostream& os, const ClueObj& o);
         

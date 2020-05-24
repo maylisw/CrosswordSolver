@@ -25,6 +25,15 @@ ClueObj& ClueObj::operator=(const ClueObj& rhs) {
     return *this;
 }
 
+bool ClueObj::operator<( const ClueObj & rhs) const {
+    if(clue < rhs.clue) {
+        return true;
+    }
+
+    // now copy over
+   return false;
+}
+
 // put-to operator
 ostream& operator<<(ostream& os, const ClueObj& o) {
     os << "{" << o.clue.c_str() << ", " << o.answer.c_str() << "}";

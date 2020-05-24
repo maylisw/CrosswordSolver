@@ -8,8 +8,9 @@
 #include <memory>
 #include <curl/curl.h>
 #include <jsoncpp/json/json.h>
-
+#include <fstream>
 #include "ClueObj.h"
+#include <set>
 
 const int years[] = {1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983,
                      1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991,
@@ -18,9 +19,13 @@ const int years[] = {1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983,
                      2008, 2009, 2010, 2011, 2012, 2013, 2014};
 
 // Days per month
-const int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
+const int months[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
+const int leapMonths[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
 
 using namespace std;
+
+int getAll(set<ClueObj>& pairs);
+
 
 namespace {
     size_t callback(
@@ -35,7 +40,7 @@ namespace {
     }
 }
 
-int getPairs(int year, int month, int day/*, set<ClueObj>& pairs*/) {
+int getPairs(int year, int month, int day, set<ClueObj>& pairs) {
     // Create url
     char format_url[100];
     snprintf(format_url, sizeof(format_url), "https://raw.githubusercontent.com"
@@ -79,13 +84,14 @@ int getPairs(int year, int month, int day/*, set<ClueObj>& pairs*/) {
                 Json::Value a_across = jsonData["answers"]["across"];
                 Json::Value a_down = jsonData["answers"]["down"];
                 
-                ClueObj *obj;
+                
 
                 if(c_across.size() == a_across.size()) {
                     for(int i = 0; i < (int) c_across.size(); i ++) {
                         string clue = c_across[i].asString();
-                        obj = new ClueObj(clue.substr(clue.find(". ") + 2), a_across[i].asString());
-                        cerr << *obj << endl;; 
+                        ClueObj obj(clue.substr(clue.find(". ") + 2), a_across[i].asString());
+                        pairs.insert(obj);
+                        cerr << obj << endl;; 
                     }
                 } else {
                     cerr << "c len: " << c_across.size() << " a len: " << a_across.size() << endl;
@@ -98,8 +104,9 @@ int getPairs(int year, int month, int day/*, set<ClueObj>& pairs*/) {
                 if(c_down.size() == a_down.size()) {
                     for(int i = 0; i < (int) c_down.size(); i ++) {
                         string clue = c_down[i].asString();
-                        obj = new ClueObj(clue.substr(clue.find(". ") + 2), a_down[i].asString());
-                        cerr << *obj << endl;
+                        ClueObj obj(clue.substr(clue.find(". ") + 2), a_down[i].asString());
+                        pairs.insert(obj);
+                        cerr << obj << endl;
                     }
                 } else {
                     cerr << "c len: " << c_down.size() << " a len: " << a_down.size() << endl;
@@ -132,9 +139,39 @@ int main(int argc, char **argv) {
     // NOTE: leap years all divide by 4
     //KNOWN gaps, aug 10, 1978 trhough nov 5, 1978
     //inconsistant data starting in 2015
+    if(argc<2){
+        return -1;
+    }
 
-    /*set<ClueObj> pairs = new set<ClueObj>;*/
-    getPairs(1980, 1, 31/*, pairs*/);
+    ofstream ofile(argv[1]);
+    set<ClueObj> pairs;
+    getPairs(1980, 1, 31, pairs);
+    //getAll(pairs);
+
 
     return 0;
+}
+
+
+int getAll(set<ClueObj>& pairs){
+
+    for(unsigned int ycount = 0 ; ycount < sizeof(years); ++ycount){
+        for(unsigned int mcount = 0; mcount < sizeof(months); ++mcount){
+
+            if(years[ycount]%4==0){
+                for(int day = 1; day <= leapMonths[mcount]; day++){
+                    getPairs(years[ycount], mcount +1, day, pairs);
+                }
+            }
+
+            else{
+                for(int day = 1; day <= months[mcount]; day++){
+                    getPairs(years[ycount], mcount +1, day, pairs);
+                }
+            }
+        }
+    }
+
+    return 0;
+
 }
