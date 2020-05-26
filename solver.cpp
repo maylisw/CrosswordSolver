@@ -24,7 +24,7 @@ const int years[] = {1976};
 const int months[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
 const int leapMonths[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
 const std::vector<string> outfileNames = {"len3.txt", "len4.txt", "len5.txt", "len6.txt", "len7.txt", "len8+.txt"};
-
+const string delim = " ||| ";
 const int MINWORDLENGTH = 3;
 const int MAXWORDLENGTH = 8;
 const int BUFFERSIZE = 75;
@@ -172,11 +172,12 @@ int main(int argc, char **argv) {
     set<ClueObj> pairs;
 
 
-    getPairs(2009, 12, 3, pairs);
-    //getAll(pairs);
+    //getPairs(1978, 06, 1, pairs);
+    getAll(pairs);
     printAll(pairs);
 
 
+    //cout<< findInFile("Pat" , 3) <<endl;
 
 
     return 0;
@@ -225,9 +226,9 @@ void printAll(set<ClueObj>& pairs){
         int length = min( MAXWORDLENGTH, (int)(cit -> getAnswer()).size() );
         length = max(MINWORDLENGTH, length);
 
-        string in = cit -> getClue() + " ||| " + cit -> getAnswer() + '\n';
+        string in = cit -> getClue() + delim + cit -> getAnswer() + '\n';
 
-        in.resize(75);
+        in.resize(BUFFERSIZE);
 
 
         *(ofiles[length- MINWORDLENGTH]) << in;
@@ -269,22 +270,24 @@ string findInFile(string clue, int answerLength){
 string binarySearchHelper( int left, int right, ifstream & ifile, string & clue){
 
     if(left >= right){
-        return NULL;
+        return "";
     }
 
-    int mid = (right - left)/2;
+    int mid = (right + left)/2;
+    //cout << left << " " << right << " " << mid << endl;
+
     char bufferline[BUFFERSIZE];
 
     ifile.seekg( (mid) * BUFFERSIZE);
     ifile.getline(bufferline, BUFFERSIZE);
 
     string bufferStr(bufferline);
-    string bufferClue(bufferStr.substr(0 , bufferStr.find(" ||| ")));
+    string bufferClue(bufferStr.substr(0 , bufferStr.find(delim)));
 
 
 
     if (clue == bufferClue){
-        return bufferStr.substr(bufferStr.find(" ||| ") +5);
+        return bufferStr.substr(bufferStr.find(delim) +delim.size());
     }
 
     else if( clue < bufferClue){
@@ -296,3 +299,4 @@ string binarySearchHelper( int left, int right, ifstream & ifile, string & clue)
 
 
 }
+
