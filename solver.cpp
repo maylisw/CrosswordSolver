@@ -12,20 +12,29 @@
 #include "ClueObj.h"
 #include <set>
 
-const int years[] = {1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983,
+const int years[] = {1976}; 
+
+/*    1977, 1978, 1979, 1980, 1981, 1982, 1983,
                      1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991,
                      1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
                      2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                      2008, 2009, 2010, 2011, 2012, 2013, 2014};
-
+*/
 // Days per month
-const int months[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
+const int months[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
 const int leapMonths[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; 
+const std::vector<string> outfileNames = {"len3.txt", "len4.txt", "len5.txt", "len6.txt", "len7.txt", "len8+.txt"};
+
+const int MINWORDLENGTH = 3;
+const int MAXWORDLENGTH = 8;
+const int BUFFERSIZE = 75;
 
 using namespace std;
 
 int getAll(set<ClueObj>& pairs);
-
+void printAll(set<ClueObj>& pairs);
+string findInFile(string clue, int answerLength);
+string binarySearchHelper( int left, int right, ifstream & ifile, string & clue);
 
 namespace {
     size_t callback(
@@ -60,6 +69,8 @@ int getPairs(int year, int month, int day, set<ClueObj>& pairs) {
 
         // Response information
         long httpCode(0);
+
+        
         unique_ptr<string> httpData(new string);
 
         // Data handling function and container
@@ -71,7 +82,7 @@ int getPairs(int year, int month, int day, set<ClueObj>& pairs) {
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
         curl_easy_cleanup(curl);
 
-        if(httpCode != CURLE_HTTP_RETURNED_ERROR) {
+        if(httpCode == 200) {
             cerr << "Sucessful response from " << url << endl;
             Json::Value jsonData;
             Json::Reader jsonReader;
@@ -79,25 +90,34 @@ int getPairs(int year, int month, int day, set<ClueObj>& pairs) {
             if(jsonReader.parse(*httpData.get(), jsonData)) {
                 cerr << "Sucessfully parsed JSON data" << endl;
 
-                Json::Value c_across = jsonData["clues"]["across"];
-                Json::Value c_down = jsonData["clues"]["down"];
-                Json::Value a_across = jsonData["answers"]["across"];
-                Json::Value a_down = jsonData["answers"]["down"];
-                
-                
+                Json::Value c_across;
+                Json::Value c_down ;
+                Json::Value a_across;
+                Json::Value a_down;
+
+            
+                c_across = jsonData["clues"]["across"];
+                c_down = jsonData["clues"]["down"];
+                a_across = jsonData["answers"]["across"];
+                a_down = jsonData["answers"]["down"];
+            
+
+            
 
                 if(c_across.size() == a_across.size()) {
                     for(int i = 0; i < (int) c_across.size(); i ++) {
                         string clue = c_across[i].asString();
                         ClueObj obj(clue.substr(clue.find(". ") + 2), a_across[i].asString());
                         pairs.insert(obj);
-                        cerr << obj << endl;; 
+                        //cerr << obj << endl;; 
                     }
                 } else {
                     cerr << "c len: " << c_across.size() << " a len: " << a_across.size() << endl;
-                    cerr << c_across << endl;
-                    cerr << a_across << endl;
+                    //cerr << c_across << endl;
+                    //cerr << a_across << endl;
                     cerr << "Across clues and answers are not the same len" << endl;
+
+                    delete httpData.get();
                     return 1;
                 }
 
@@ -106,29 +126,37 @@ int getPairs(int year, int month, int day, set<ClueObj>& pairs) {
                         string clue = c_down[i].asString();
                         ClueObj obj(clue.substr(clue.find(". ") + 2), a_down[i].asString());
                         pairs.insert(obj);
-                        cerr << obj << endl;
+                        //cerr << obj << endl;
                     }
                 } else {
                     cerr << "c len: " << c_down.size() << " a len: " << a_down.size() << endl;
-                    cerr << c_down << endl;
-                    cerr << a_down<< endl;
+                    //cerr << c_down << endl;
+                    //cerr << a_down<< endl;
                     cerr << "Down clues and answers are not the same len" << endl;
+                    delete  httpData.get();
                     return 1;
                 }
+
+
             } else {
                 cerr << "Could not parse HTTP data as JSON" << endl;
-                cerr <<  "HTTP data was:\n" << *httpData.get() << endl;
+                //cerr <<  "HTTP data was:\n" << *httpData.get() << endl;
+                delete httpData.get();
                 return 1;
             }
+            //delete httpData.get();
         } else {
             cerr << "Couldn't GET from " << url << endl;
             cerr << httpCode << " error" << endl;
+            delete httpData.get();
             return 1;
         }
     } else {
         cerr << "Curl failed" <<endl;
+        //delete httpData.get();
         return 1;
     }
+    //delete httpData.get();
     return 0;
 }
 
@@ -139,33 +167,40 @@ int main(int argc, char **argv) {
     // NOTE: leap years all divide by 4
     //KNOWN gaps, aug 10, 1978 trhough nov 5, 1978
     //inconsistant data starting in 2015
-    if(argc<2){
-        return -1;
-    }
 
-    ofstream ofile(argv[1]);
+
     set<ClueObj> pairs;
-    getPairs(1980, 1, 31, pairs);
+
+
+    getPairs(2009, 12, 3, pairs);
     //getAll(pairs);
+    printAll(pairs);
+
+
 
 
     return 0;
 }
 
 
+
+
+
+
 int getAll(set<ClueObj>& pairs){
 
-    for(unsigned int ycount = 0 ; ycount < sizeof(years); ++ycount){
-        for(unsigned int mcount = 0; mcount < sizeof(months); ++mcount){
+
+    for(unsigned int ycount = 0 ; ycount < sizeof(years)/sizeof(years[0]); ++ycount){
+        for(unsigned int mcount = 0; mcount < sizeof(months)/ sizeof(months[0]); ++mcount){
 
             if(years[ycount]%4==0){
-                for(int day = 1; day <= leapMonths[mcount]; day++){
+                for(int day = 1; day <= leapMonths[mcount]; ++day){
                     getPairs(years[ycount], mcount +1, day, pairs);
                 }
             }
 
             else{
-                for(int day = 1; day <= months[mcount]; day++){
+                for(int day = 1; day <= months[mcount]; ++day){
                     getPairs(years[ycount], mcount +1, day, pairs);
                 }
             }
@@ -173,5 +208,91 @@ int getAll(set<ClueObj>& pairs){
     }
 
     return 0;
+
+}
+
+void printAll(set<ClueObj>& pairs){
+    ofstream ** ofiles = new ofstream * [outfileNames.size()];
+
+    for(unsigned int fileNum =0; fileNum < outfileNames.size(); ++fileNum){
+
+        ofiles[fileNum] = new ofstream(outfileNames[fileNum]); 
+    }
+
+
+    for(set<ClueObj>::const_iterator cit = pairs.begin(); cit != pairs.end(); ++cit){
+
+        int length = min( MAXWORDLENGTH, (int)(cit -> getAnswer()).size() );
+        length = max(MINWORDLENGTH, length);
+
+        string in = cit -> getClue() + " ||| " + cit -> getAnswer() + '\n';
+
+        in.resize(75);
+
+
+        *(ofiles[length- MINWORDLENGTH]) << in;
+    }
+
+
+
+    for(unsigned int fileNum =0; fileNum < outfileNames.size(); ++fileNum){
+        delete ofiles[fileNum]; 
+    }
+
+    delete [] ofiles;
+}
+
+
+
+
+string findInFile(string clue, int answerLength){
+
+    answerLength = max(MINWORDLENGTH, answerLength);
+    answerLength = min(MAXWORDLENGTH, answerLength);
+
+    ifstream ifile(outfileNames[answerLength - MINWORDLENGTH]);
+
+
+    
+    int fileSize;
+
+    ifile.seekg(0, ifile.end);
+
+    fileSize = ifile.tellg()/BUFFERSIZE;
+
+    //cout << ifile.tellg() << endl;1
+
+    return binarySearchHelper( 0 , fileSize, ifile, clue);
+}
+
+
+string binarySearchHelper( int left, int right, ifstream & ifile, string & clue){
+
+    if(left >= right){
+        return NULL;
+    }
+
+    int mid = (right - left)/2;
+    char bufferline[BUFFERSIZE];
+
+    ifile.seekg( (mid) * BUFFERSIZE);
+    ifile.getline(bufferline, BUFFERSIZE);
+
+    string bufferStr(bufferline);
+    string bufferClue(bufferStr.substr(0 , bufferStr.find(" ||| ")));
+
+
+
+    if (clue == bufferClue){
+        return bufferStr.substr(bufferStr.find(" ||| ") +5);
+    }
+
+    else if( clue < bufferClue){
+        return binarySearchHelper(left, mid, ifile, clue);
+    }
+    else{
+        return binarySearchHelper(mid + 1, right, ifile, clue);
+    }
+
 
 }

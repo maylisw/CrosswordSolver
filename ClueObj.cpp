@@ -41,3 +41,10 @@ ostream& operator<<(ostream& os, const ClueObj& o) {
 }
 
 
+ string ClueObj::getClue() const{
+    return clue;
+}
+
+string ClueObj::getAnswer() const{
+    return answer;
+}

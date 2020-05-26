@@ -27,9 +27,9 @@ class ClueObj {
         friend ostream& operator<<(ostream& os, const ClueObj& o);
         
         // GETTERS
-        string getClue() {return clue; }
+        string getClue() const;
 
-        string getAnswer() {return answer; }
+        string getAnswer() const;
 
         int length() const {return answer.length(); }
 
