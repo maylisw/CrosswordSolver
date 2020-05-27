@@ -10,14 +10,14 @@ LDFLAGS = -g
 LDLIBS  = -ljsoncpp -lcurl 
 
 executables = solver #JSON-test	
-objects = ClueObj.o solver.o #JSON-test.o
+objects = ClueObj.o crossword.o solver.o #JSON-test.o
 
 .PHONY: default
 default: $(executables)
 
 $(executables): $(objects) 
 
-$(objects): ClueObj.h
+$(objects): ClueObj.h crossword.h
 
 .PHONY: clean
 clean:

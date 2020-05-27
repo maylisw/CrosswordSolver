@@ -10,6 +10,7 @@
 #include <jsoncpp/json/json.h>
 #include <fstream>
 #include "ClueObj.h"
+#include "crossword.h"
 #include <set>
 
 const int years[] = {1976}; 
@@ -172,9 +173,11 @@ int main(int argc, char **argv) {
     set<ClueObj> pairs;
 
 
-    //getPairs(1978, 06, 1, pairs);
-    getAll(pairs);
-    printAll(pairs);
+    Crossword c(1978, 06, 1);
+
+    cout << c << endl;
+    //getAll(pairs);
+    //printAll(pairs);
 
 
     //cout<< findInFile("Pat" , 3) <<endl;
@@ -275,12 +278,9 @@ string binarySearchHelper( int left, int right, ifstream & ifile, string & clue)
 
     int mid = (right + left)/2;
     //cout << left << " " << right << " " << mid << endl;
-
     char bufferline[BUFFERSIZE];
-
     ifile.seekg( (mid) * BUFFERSIZE);
     ifile.getline(bufferline, BUFFERSIZE);
-
     string bufferStr(bufferline);
     string bufferClue(bufferStr.substr(0 , bufferStr.find(delim)));
 
@@ -289,14 +289,11 @@ string binarySearchHelper( int left, int right, ifstream & ifile, string & clue)
     if (clue == bufferClue){
         return bufferStr.substr(bufferStr.find(delim) +delim.size());
     }
-
     else if( clue < bufferClue){
         return binarySearchHelper(left, mid, ifile, clue);
     }
     else{
         return binarySearchHelper(mid + 1, right, ifile, clue);
     }
-
-
 }
 
